@@ -1,15 +1,16 @@
 import json
+import os
 import traceback
 import uuid
 from typing import Any, Callable, Dict, Mapping, Sequence
 
 from fastapi.responses import StreamingResponse
-from openai import OpenAI
+from groq import Groq
 from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
 
 
 def stream_text(
-    client: OpenAI,
+    client: Groq,
     messages: Sequence[ChatCompletionMessageParam],
     tool_definitions: Sequence[Dict[str, Any]],
     available_tools: Mapping[str, Callable[..., Any]],
@@ -30,12 +31,24 @@ def stream_text(
 
         yield format_sse({"type": "start", "messageId": message_id})
 
-        stream = client.chat.completions.create(
-            messages=messages,
-            model="gpt-4o",
-            stream=True,
-            tools=tool_definitions,
-        )
+        # Get model from environment or use default Groq model
+        # Available models: llama-3.3-70b-versatile, llama-3.1-70b-versatile, 
+        # mixtral-8x7b-32768, gemma2-9b-it, etc.
+        model = os.getenv("GROQ_MODEL", "meta-llama/llama-4-scout-17b-16e-instruct")
+    
+        
+        # Build request parameters
+        request_params = {
+            "messages": messages,
+            "model": model,
+            "stream": True,
+        }
+        
+        # Only add tools if they're provided (some Groq models may not support tools)
+        if tool_definitions:
+            request_params["tools"] = tool_definitions
+        
+        stream = client.chat.completions.create(**request_params)
 
         for chunk in stream:
             for choice in chunk.choices:

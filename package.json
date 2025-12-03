@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "fastapi-dev": "pip3 install -r requirements.txt && python3 -m uvicorn api.index:app --reload",
+    "fastapi-dev": "./venv/bin/python -m uvicorn api.index:app --reload --host 127.0.0.1 --port 8000",
     "next-dev": "next dev",
     "dev": "concurrently \"npm run next-dev\" \"npm run fastapi-dev\"",
     "build": "next build",
@@ -41,6 +41,7 @@
     "tailwindcss-animate": "^1.0.7",
     "types": "link:next-themes/dist/types",
     "typescript": "5.0.4",
-    "usehooks-ts": "^3.1.0"
+    "usehooks-ts": "^3.1.0",
+    "zod": "^4.1.13"
   }
 }
